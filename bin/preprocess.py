@@ -17,6 +17,9 @@ _NUM_OF_MP = 5
 ## season : 偏好季節 
 ## month : 出團月份
 
+## feature.Numerical : 數值型特徵前處理方法
+## feature.Categorical : 類別型特徵前處理方法
+
 _FEATURE_PREPROC = {
     'monetary': feature.Numerical('benefit', result_column='monetary').sum_value,
     'frequency': feature.Numerical('',result_column='frequency').count_row,
@@ -60,7 +63,7 @@ def main(raw_data: pd.DataFrame(), have_paid=True, filter:list=['monetary', 'fre
     rd_gb_uid = raw_data.groupby('uid')
 
     if multi_p:
-        # multiprocessing
+        # multiprocessing, 暫時出狀況待修
         que = Queue()
         for uid, gb_df in rd_gb_uid:
             que.put((uid, gb_df, ff))
