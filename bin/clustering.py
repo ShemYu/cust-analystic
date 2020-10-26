@@ -36,7 +36,7 @@ def best_k(feature_matrix:pd.DataFrame(), max_k:int=20):
         feature_matrix (pd.DataFrame): 特徵矩陣
         max_k (int, optional): 測試的最大值. Defaults to 20.
     """    
-    sils = get_sils(feature_matrix, max_k)ㄕ
+    sils = get_sils(feature_matrix, max_k)
     return sils.index(max(sils))+2
 
 def kmeans_by_bestK(feature_matrix:pd.DataFrame(), feature_columns:list=[], max_k:int=20):
