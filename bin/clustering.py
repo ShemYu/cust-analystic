@@ -1,5 +1,6 @@
 from sklearn.cluster import KMeans as km
 from sklearn.metrics import silhouette_score
+from multiprocessing import Queue, Process, Manager
 import bin.feature as feature
 import numpy as np
 import pandas as pd
@@ -49,16 +50,43 @@ def kmeans_by_bestK(feature_matrix:pd.DataFrame(), feature_columns:list=[], max_
     km_model = kmeans(feature_matrix, k=best_k(feature_matrix, max_k=max_k), feature_columns=feature_columns)
     return km_model
 
-def get_sils(fm, max_k, columns=[]):
+def get_sils(fm, max_k, columns:list=[], multi_p:bool=False):
     sils = []
     if not columns:
         columns = fm.columns
-    for K in range(2, max_k):
-        temp_kmeans = kmeans(fm, k=K)
+    if multi_p:
+        que = Queue()
+        return_dict = Manager().dict()
         features = fm[columns]
         x = np.array(features)
-        sils.append(silhouette_score(x, temp_kmeans.labels_))
+        # put in queue
+        for K in range(2, max_k):
+            que.put((fm,K,return_dict))
+        # put in process
+        plist = []
+        for _ in range(5):
+            p = Process(target=mp_get_sils_worker, args=(que, return_dict))
+            plist.append(p)
+            p.start()
+        # join
+        for p in plist:
+            p.join()
+        # result sils
+        sils = [return_dict[K] for K in range(2, max_k)]
+    else:
+        features = fm[columns]
+        x = np.array(features)
+        for K in range(2, max_k):
+            temp_kmeans = kmeans(x, k=K)
+            sils.append(silhouette_score(x, temp_kmeans.labels_))
     return sils
+
+
+def mp_get_sils_worker(que,return_dict):
+    while not que.empty():
+        x, K, return_dict = que.get()
+        temp_kmeans = kmeans(x, k=K)
+        return_dict[K] = silhouette_score(x, temp_kmeans.labels_)
 
 def describe_km(fm_clustered, feature_columns=[], cluster_id_column_name='cid'):
     """群中心以dataframe方式呈現
