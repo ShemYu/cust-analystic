@@ -1,0 +1,4 @@
+bin/get_data.py
+doc/db_config.ini
+doc/RFM/query_db_season.xlsx
+tests/test.ipynb
